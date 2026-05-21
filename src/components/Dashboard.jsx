@@ -69,6 +69,7 @@ export default function Dashboard() {
   const { t } = useLanguage();
   const [tick, setTick] = useState(0);
   const [selectedSensorId, setSelectedSensorId] = useState("osh-bazaar");
+  const [activeTab, setActiveTab] = useState("live");
   const heatOpacity = 0.56;
   const filterHealth = 78;
 
@@ -115,13 +116,56 @@ export default function Dashboard() {
           />
 
           <div className="flex min-h-0 flex-col gap-4">
-            <AQIMap
-              sensors={sensors}
-              selectedSensor={selectedSensor}
-              onSelectSensor={setSelectedSensorId}
-              heatOpacity={heatOpacity}
-            />
-            <HistoricalPanel aqiSeries={aqiSeries} sensors={sensors} />
+            {/* Tab Swer / Переключатель вкладок */}
+            <div className="flex items-center gap-1 rounded-lg border border-[color:var(--border)] bg-[color:var(--surface-soft)] p-1 self-start">
+              <button
+                onClick={() => setActiveTab("live")}
+                className={`rounded-md px-4 py-1.5 text-xs font-semibold uppercase tracking-wider transition-all ${
+                  activeTab === "live"
+                    ? "bg-[color:var(--accent)] text-slate-950 shadow-[0_0_12px_var(--accent-glow)]"
+                    : "text-[color:var(--text-muted)] hover:text-[color:var(--text)]"
+                }`}
+              >
+                {t("liveMonitor")}
+              </button>
+              <button
+                onClick={() => setActiveTab("gallery")}
+                className={`rounded-md px-4 py-1.5 text-xs font-semibold uppercase tracking-wider transition-all ${
+                  activeTab === "gallery"
+                    ? "bg-[color:var(--accent)] text-slate-950 shadow-[0_0_12px_var(--accent-glow)]"
+                    : "text-[color:var(--text-muted)] hover:text-[color:var(--text)]"
+                }`}
+              >
+                {t("systemGallery")}
+              </button>
+            </div>
+
+            {activeTab === "live" ? (
+              <motion.div
+                key="live-tab"
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.25 }}
+                className="flex flex-col gap-4"
+              >
+                <AQIMap
+                  sensors={sensors}
+                  selectedSensor={selectedSensor}
+                  onSelectSensor={setSelectedSensorId}
+                  heatOpacity={heatOpacity}
+                />
+                <HistoricalPanel aqiSeries={aqiSeries} sensors={sensors} />
+              </motion.div>
+            ) : (
+              <motion.div
+                key="gallery-tab"
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.25 }}
+              >
+                <SystemGallery />
+              </motion.div>
+            )}
           </div>
 
           <SystemPanel selectedSensor={selectedSensor} filterHealth={filterHealth} filterDays={filterDays} apiEndpoints={API_ENDPOINTS} />
@@ -269,5 +313,138 @@ function SmallStat({ label, value, suffix, color }) {
         {value} {suffix ? <span className="text-sm font-medium text-[color:var(--text-muted)]">{suffix}</span> : null}
       </p>
     </div>
+  );
+}
+
+function SystemGallery() {
+  const { t } = useLanguage();
+
+  const galleryItems = [
+    {
+      id: "device",
+      image: "/images/device_render.png",
+      title: t("deviceRenderTitle"),
+      desc: t("deviceRenderDesc"),
+      specs: [
+        { label: "Processor / Процессор", value: "Raspberry Pi 4 Model B (4GB RAM)" },
+        { label: "Purification / Фильтрация", value: "HEPA H13 + Active Carbon Filter" },
+        { label: "Casing / Корпус", value: "Custom laser-cut 4mm transparent acrylic" },
+        { label: "Control / Управление", value: "PWM auto-regulated 12V dual 120mm fans" }
+      ]
+    },
+    {
+      id: "filter",
+      image: "/images/filter_diagram.png",
+      title: t("filterDiagramTitle"),
+      desc: t("filterDiagramDesc"),
+      specs: [
+        { label: "Layer 1 / Слой 1", value: "Nylon mesh pre-filter (dust, hair, debris)" },
+        { label: "Layer 2 / Слой 2", value: "Medical-grade H13 HEPA (99.97% PM2.5 trap)" },
+        { label: "Layer 3 / Слой 3", value: "Granular active carbon (gases, odors, VOCs)" },
+        { label: "Lifespan / Ресурс", value: "90-120 days depending on winter smog level" }
+      ]
+    },
+    {
+      id: "schematic",
+      image: "/images/system_schematic.png",
+      title: t("systemSchematicTitle"),
+      desc: t("systemSchematicDesc"),
+      specs: [
+        { label: "Sensors / Датчики", value: "Laser PM2.5 (SDS011) + Temperature/Humid (DHT22)" },
+        { label: "Communication / Сеть", value: "MQTT broker telemetry + REST JSON API" },
+        { label: "Telemetry / Частота", value: "Live updates published every 2.4 seconds" },
+        { label: "Data Logging / Логи", value: "Local SQLite db on 32GB MicroSD card" }
+      ]
+    },
+    {
+      id: "bishkek",
+      image: "/images/bishkek_panoramic.png",
+      title: t("bishkekPanoramicTitle"),
+      desc: t("bishkekPanoramicDesc"),
+      specs: [
+        { label: "Location / Локация", value: "Bishkek, Kyrgyzstan (Chuy Valley)" },
+        { label: "Context / Контекст", value: "Extreme winter heating season smog mitigation" },
+        { label: "Target / Цель", value: "Maintain indoor PM2.5 index below 15 ug/m3" },
+        { label: "Status / Статус", value: "Prototyping, sensor grid active" }
+      ]
+    }
+  ];
+
+  const [activeItem, setActiveItem] = useState(galleryItems[0]);
+
+  return (
+    <section className="glass-panel p-5 flex flex-col gap-5">
+      <div>
+        <h3 className="text-xl font-semibold text-[color:var(--text)]">{t("galleryTitle")}</h3>
+        <p className="mt-1 text-sm text-[color:var(--text-muted)]">{t("gallerySubtitle")}</p>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-5">
+        {/* Main Display */}
+        <div className="flex flex-col gap-4">
+          <div className="relative group overflow-hidden rounded-lg border border-[color:var(--border)] bg-black/40 aspect-video flex items-center justify-center">
+            <motion.img
+              key={activeItem.id}
+              src={activeItem.image}
+              alt={activeItem.title}
+              className="w-full h-full object-cover"
+              initial={{ opacity: 0, scale: 0.98 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.3 }}
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-4">
+              <a
+                href={activeItem.image}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="rounded bg-cyan-500 hover:bg-cyan-600 px-3 py-1.5 text-xs font-semibold text-slate-950 flex items-center gap-1.5 transition-all shadow-[0_0_12px_rgba(6,182,212,0.4)]"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M15 3h6v6M10 14L21 3M18 21H3V6h7" />
+                </svg>
+                {t("viewFullSize")}
+              </a>
+            </div>
+          </div>
+
+          {/* Thumbnails */}
+          <div className="grid grid-cols-4 gap-2">
+            {galleryItems.map((item) => (
+              <button
+                key={item.id}
+                onClick={() => setActiveItem(item)}
+                className={`relative rounded-md overflow-hidden border aspect-video transition-all ${
+                  activeItem.id === item.id
+                    ? "border-[color:var(--accent)] ring-2 ring-[color:var(--accent-glow)]"
+                    : "border-[color:var(--border)] opacity-60 hover:opacity-100"
+                }`}
+              >
+                <img src={item.image} alt={item.title} className="w-full h-full object-cover" />
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Info & Specs */}
+        <div className="flex flex-col gap-4 justify-between">
+          <div className="space-y-3">
+            <h4 className="text-lg font-semibold text-[color:var(--text)]">{activeItem.title}</h4>
+            <p className="text-sm text-[color:var(--text-muted)] leading-relaxed">{activeItem.desc}</p>
+          </div>
+
+          <div className="rounded-lg border border-[color:var(--border)] bg-[color:var(--surface-soft)] p-4 space-y-3">
+            <h5 className="text-xs uppercase tracking-[0.24em] font-semibold text-[color:var(--text-muted)]">Specs & Telemetry</h5>
+            <div className="space-y-2">
+              {activeItem.specs.map((spec) => (
+                <div key={spec.label} className="flex flex-col border-b border-[color:var(--border)] pb-1.5 last:border-b-0 last:pb-0">
+                  <span className="text-[10px] uppercase tracking-wider text-[color:var(--text-muted)]">{spec.label}</span>
+                  <span className="text-xs font-medium text-[color:var(--text)] mt-0.5">{spec.value}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
   );
 }
